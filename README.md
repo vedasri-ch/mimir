@@ -1,9 +1,30 @@
 # Mimir
 
-A high-performance, persistent, in-memory key-value store built in C++20.  
-Inspired by Redis. Designed for systems programming depth.
+A high-performance, persistent, in-memory key-value cache engine built in C++20.
 
 > Norse mythology: Mimir is the guardian of the well of wisdom and memory.
+
+---
+
+## What is Mimir?
+
+Mimir is a persistent, network-accessible key-value cache engine built from scratch in C++20, demonstrating real-world systems programming across five domains: **networking, storage engines, concurrency, persistence, and performance engineering**.
+
+It accepts TCP connections from multiple clients simultaneously and processes key-value commands at high throughput. Here is what happens end-to-end:
+
+**Networking** — A single I/O thread runs a Linux `epoll` event loop in edge-triggered mode. It accepts thousands of concurrent client connections using non-blocking sockets, reads incoming command bytes, and writes RESP-encoded responses back — all without blocking.
+
+**Protocol** — Commands like `SET name alice` arrive as newline-terminated lines, get parsed into structured `Command` objects by a tokeniser, and are dispatched through a clean command handler instead of brittle if-else chains. The wire format is RESP, which means any standard cache client works out of the box.
+
+**Storage Engine** — Keys are stored in a sharded hash table: 16 independent `unordered_map` buckets, each protected by its own `shared_mutex`. Concurrent writes to different keys don't block each other, and reads proceed in parallel. Values can be strings or 64-bit integers. TTL expiry is tracked per entry and enforced both lazily on access and eagerly by a background sweep thread.
+
+**Persistence (WAL)** — Before any write is applied to memory, a binary record is appended to a Write-Ahead Log on disk. Each record is protected by a CRC32 checksum. If the process crashes, Mimir replays the WAL on the next startup to restore every committed operation — the same crash-recovery model used by production databases like PostgreSQL.
+
+**Snapshotting** — Periodically, Mimir serialises the entire in-memory state to a compact binary snapshot file using an atomic write (temp file + rename). On startup, the snapshot is loaded first for fast bulk restore, then the WAL is replayed on top to catch any writes since the last checkpoint.
+
+**Concurrency** — A thread pool handles CPU-bound work off the I/O thread. INCR/DECR are implemented as true atomic read-modify-write operations under a single write lock — no TOCTOU races. The expiry sweeper and snapshot timer run on dedicated threads and wake up instantly on shutdown via condition variables.
+
+The result is a server that sustains millions of operations per second in-process, survives unclean crashes without data loss, and is fully compatible with standard client tooling.
 
 ```
 SET user:1 alice
