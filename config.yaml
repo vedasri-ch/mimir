@@ -1,0 +1,24 @@
+# Mimir configuration
+
+host: "0.0.0.0"
+port: 6379
+worker_threads: 4
+backlog: 128
+
+# Storage
+num_shards: 16
+max_memory: 0          # 0 = unlimited (bytes)
+eviction_policy: lru   # lru | lfu | noeviction
+
+# Persistence
+wal_enabled: true
+wal_path: "./data/mimir.wal"
+rdb_path: "./data/mimir.rdb"
+snapshot_interval_sec: 300   # 0 = disabled
+fsync_always: false          # true = safe but slow; false = fast, minor data-loss window
+
+# Expiration
+expiry_check_interval_ms: 100
+
+# Logging
+log_level: INFO   # DEBUG | INFO | WARN | ERROR

@@ -1,0 +1,8 @@
+build/
+data/
+*.wal
+*.rdb
+*.o
+*.a
+compile_commands.json
+.cache/
