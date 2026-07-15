@@ -1,5 +1,7 @@
 #include "store.hpp"
 #include <functional>
+#include <memory>
+#include <mutex>
 #include <stdexcept>
 
 namespace mimir {

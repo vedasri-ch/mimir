@@ -14,17 +14,27 @@ endif()
 add_compile_options(
   -Wall -Wextra -Wpedantic
   -Wno-unused-parameter
-  $<$<CONFIG:Release>:-O3 -march=native>
-  $<$<CONFIG:Debug>:-g -O0 -fsanitize=address,undefined>
 )
 
-add_link_options(
-  $<$<CONFIG:Debug>:-fsanitize=address,undefined>
-)
+# Per-config flags (Release vs Debug)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+set(CMAKE_CXX_FLAGS_DEBUG   "-g -O0 -fsanitize=address,undefined")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address,undefined")
 
 # Dependencies
 find_package(Threads REQUIRED)
-find_package(yaml-cpp REQUIRED)
+
+# Build yaml-cpp from source to avoid system ABI mismatches
+include(FetchContent)
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG        0.8.0
+  GIT_SHALLOW    TRUE
+)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS  OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(yaml-cpp)
 
 # GoogleTest
 include(FetchContent)

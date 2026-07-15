@@ -26,7 +26,9 @@ public:
         if (level < min_level_.load(std::memory_order_relaxed)) return;
 
         char msg[2048];
-        std::snprintf(msg, sizeof(msg), fmt, std::forward<Args>(args)...);
+        std::snprintf(msg, sizeof(msg), "%s", fmt);
+        if constexpr (sizeof...(args) > 0)
+            std::snprintf(msg, sizeof(msg), fmt, std::forward<Args>(args)...);
 
         auto now = std::chrono::system_clock::now();
         std::time_t t = std::chrono::system_clock::to_time_t(now);

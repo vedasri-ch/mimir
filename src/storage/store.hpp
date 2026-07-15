@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
+#include <memory>
 #include <optional>
 #include <shared_mutex>
 #include <string>
